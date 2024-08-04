@@ -1,0 +1,106 @@
+**题目链接：**[**11.盛水最多的容器**](https://leetcode.cn/problems/container-with-most-water/)
+
+**题目描述：**
+
+给定一个长度为 n 的整数数组 height 。有 n 条垂线，第 i 条线的两个端点是 (i, 0) 和 (i, height[i]) 。
+
+找出其中的两条线，使得它们与 x 轴共同构成的容器可以容纳最多的水。
+
+返回容器可以储存的最大水量。
+
+**说明：**你不能倾斜容器。
+
+![img](https://cdn.nlark.com/yuque/0/2024/png/36110060/1717290776799-7536c7fc-21b1-43cc-a9f8-05562e90342b.png)
+**解法一（暴力求解）（会超时）：**
+
+**算法思路：**
+
+枚举出能构成的所有容器，找出其中容积最大的值。
+
+容器容积的计算方式：
+
+·设两指针 i，j，分别指向水槽版的最左端以及最右端，此时容积宽度为 j - i。由于容器的高度由两板中的短板决定，因此可得容积公式：v = (j - i) * min(height[i] , height[j])
+
+**算法代码
+class Solution {
+public:
+    int maxArea(vector<int>& height) {
+        int n = height.size();
+        int ret = 0;
+        //两层 for 枚举出所有可能出现的情况
+        for(int i = 0;i < n;i++){
+          for(int j = i + 1;j < n;j++){
+              //极端容积，找出最大的那一个
+              ret = max(ret,min(height[i],height[j])*(j - i));
+    }
+}
+    return ret;
+    }
+};
+**解法二（对撞指针）：**
+
+**算法思路：**
+
+设两个指针left 和 right 分别指向容器的左右两个端点，此时容器的容积：
+
+v = (right - left) * min ( height[right] , height[left] )
+
+容器的左边界为 height[left] ，右边界为 height[right]。
+
+然后我们**利用单调性解决此题**
+
+我们先举一个例子：
+
+![img](https://cdn.nlark.com/yuque/0/2024/png/36110060/1717292200828-02ca03f9-5c76-4b2d-8f0a-75064f483aa8.png)
+计算初始体积 v1 = （right - left）*min(height[left] , height [right])
+
+接着我们观察：v = 高 * 宽，我们的目的是找最大容积，因此我们可以多举几个
+
+例子，观察规律：
+
+通过移动指针来进行下一个容积的计算：令高为high，宽为width
+
+首先，我们计算初始容积 v = 5 * 6 = 30
+
+无论我们移动left 还是right ，宽度width都会变小
+
+如果移动left，width变小，高也会变小（6 -> 2）
+
+如果移动right，width变小，高也会变小（6 -> 4）
+
+由此可看无论怎么移动 v 都会变小，这里可以总结一个规律：如果移动之后的数，小于left与right原先所对应的值，那么这个新的v，一定比原来小 
+
+如果移动之后的数比原来的大，那么高度是不变的，width是变小的，因此v变小
+
+因此，总结出两种情况；
+
+v = high*width
+
+1️⃣high 不变 ，width减小 ，v减小
+
+2️⃣high减小，width减小，v减小
+
+我们假设左边界最小，那么此时移动left，遇到的数比left大，就会改变高度最小值（2->5），这样v就有可能增大
+
+
+
+当我们不断重复上述过程，每次都可以舍去大量不必要的枚举过程，直到left 与 right相遇，期间产生的所有容积里面的最大值，就是最终答案
+class Solution {
+public:
+    int maxArea(vector<int>& height) {
+        int left = 0,right = height.size()-1,ret = 0;
+        //容器体积一定大于0，所以这里可以设置为0
+        while(left < right){
+            //记录v的值
+            //学会使用库函数，max，min
+            int v = min(height[left],height[right]) * (right - left);
+            ret = max(ret,v);//找大值，并更新
+
+            if(height[left] <= height[right]){
+                left++;
+            }else right--;
+        }
+
+        return ret;
+    }
+};
